@@ -1,0 +1,76 @@
+{
+  "name": "SECURE_TIME",
+  "type": "SECURE",
+  "priority": "NORMAL",
+  "id": "0x00000001",
+  "entry_point": "secure_time_main",
+  "stack_size": "0x400",
+  "heap_size": "0x400",
+  "secure_functions": [{
+      "sfid": "GET_NONCE",
+      "signal": "GET_NONCE_MSK",
+      "non_secure_clients": true,
+      "minor_version": 1,
+      "minor_policy": "strict"
+    },
+    {
+      "sfid": "TIME_SET_TRUSTED",
+      "signal": "TIME_SET_TRUSTED_MSK",
+      "non_secure_clients": true,
+      "minor_version": 1,
+      "minor_policy": "strict"
+    },
+    {
+      "sfid": "TIME_SET",
+      "signal": "TIME_SET_MSK",
+      "non_secure_clients": true,
+      "minor_version": 1,
+      "minor_policy": "strict"
+    },
+    {
+      "sfid": "TIME_GET",
+      "signal": "TIME_GET_MSK",
+      "non_secure_clients": true,
+      "minor_version": 1,
+      "minor_policy": "strict"
+    },
+    {
+      "sfid": "SET_SCHEMA",
+      "signal": "SET_SCHEMA_MSK",
+      "non_secure_clients": false,
+      "minor_version": 1,
+      "minor_policy": "strict"
+    },
+    {
+      "sfid": "GET_SCHEMA",
+      "signal": "GET_SCHEMA_MSK",
+      "non_secure_clients": false,
+      "minor_version": 1,
+      "minor_policy": "strict"
+    },
+    {
+      "sfid": "SET_PUBLIC_KEY",
+      "signal": "SET_PUBLIC_KEY_MSK",
+      "non_secure_clients": false,
+      "minor_version": 1,
+      "minor_policy": "strict"
+    },
+    {
+      "sfid": "GET_PUBLIC_KEY_SIZE",
+      "signal": "GET_PUBLIC_KEY_SIZE_MSK",
+      "non_secure_clients": false,
+      "minor_version": 1,
+      "minor_policy": "strict"
+    },
+    {
+      "sfid": "GET_PUBLIC_KEY",
+      "signal": "GET_PUBLIC_KEY_MSK",
+      "non_secure_clients": false,
+      "minor_version": 1,
+      "minor_policy": "strict"
+    }
+  ],
+  "source_files": [
+    "secure_time_partition.c"
+  ]
+}
