@@ -18,7 +18,7 @@ cd mbed-os-secure-time-ipc
 git clone git@github.com:kfnta/mbed-os.git -b romkuz01_secure_time
 mbed compile -m K64F -t GCC_ARM
 ```
-At the end of the compilation process an application binary will be created at BUILD/K64F/GCC_ARM/secure_time_app.bin.
-The binary can be copied to your target board connected via USB cable.
-The output produced by the application can be monitored via any program capable of monitoring COM port traffic (PuTTY for example).
+At the end of the compilation process an application binary will be created - BUILD/K64F/GCC_ARM/secure_time_app.bin.
+This binary can be copied to your target board connected via USB cable.
+The output produced by the application can be seen in any program capable of monitoring COM port traffic (PuTTY for example).
 
