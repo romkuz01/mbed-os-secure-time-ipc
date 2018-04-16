@@ -2,7 +2,6 @@
 #include "spm_panic.h"
 #include "psa_secure_time_partition.h"
 #include "secure_time_impl.h"
-#include "secure_time_spe_impl.h"
 #include <string.h>
 
 typedef int32_t (*psa_call)(psa_msg_t *msg);

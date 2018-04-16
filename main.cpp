@@ -1,4 +1,4 @@
-#include "secure_time.h"
+#include "secure_time_client.h"
 #include <stdio.h>
 
 int main(int argc, char *argv[])
