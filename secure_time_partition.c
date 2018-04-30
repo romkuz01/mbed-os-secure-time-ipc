@@ -6,54 +6,36 @@
 
 typedef int32_t (*psa_call)(psa_msg_t *msg);
 
-static int32_t call_secure_time_get_nonce(psa_msg_t *msg)
+static int32_t call_secure_time_set_trusted_init(psa_msg_t *msg)
 {
-    uint32_t nonce_size = 0;
-    void *nonce = NULL;
-    int32_t get_nonce_status = SECURE_TIME_SUCCESS;
+    int32_t set_trusted_init_status = SECURE_TIME_SUCCESS;
+    uint64_t nonce = 0;
 
-    if (msg->in_size[0] != sizeof(uint32_t) || msg->out_size[0] != sizeof(int32_t)) {
+    if (msg->out_size[0] != sizeof(int32_t) || msg->out_size[1] != sizeof(uint64_t)) {
         return PSA_INVALID_PARAMETERS;
     }
 
-    if (psa_read(msg->handle, 0, &nonce_size, sizeof(uint32_t)) != sizeof(uint32_t)) {
-        SPM_PANIC("Failed to read the requested nonce size!\n");
+    set_trusted_init_status = secure_time_set_trusted_init_impl(&nonce);
+    psa_write(msg->handle, 0, &set_trusted_init_status, sizeof(int32_t));
+
+    if (set_trusted_init_status == SECURE_TIME_SUCCESS) {
+        psa_write(msg->handle, 1, &nonce, sizeof(uint64_t));
     }
 
-    if (msg->out_size[1] != nonce_size) {
-        return PSA_INVALID_PARAMETERS;
-    }
-    
-    if (!(nonce = malloc(nonce_size))) {
-        return PSA_MEM_ALLOC_FAILED;
-    }
-
-    get_nonce_status = secure_time_get_nonce_impl(nonce_size, nonce);
-    psa_write(msg->handle, 0, &get_nonce_status, sizeof(int32_t));
-
-    if (get_nonce_status == SECURE_TIME_SUCCESS) {
-        psa_write(msg->handle, 1, nonce, nonce_size);
-    }
-
-    free(nonce);
-    
     return PSA_SUCCESS;
 }
 
-static int32_t call_secure_time_set_trusted(psa_msg_t *msg)
+static int32_t call_secure_time_set_trusted_commit(psa_msg_t *msg)
 {
-    int32_t time_set_status = SECURE_TIME_SUCCESS;
+    int32_t time_set_commit_status = SECURE_TIME_SUCCESS;
     void *blob = NULL;
-    void *sign = NULL;
     size_t blob_size = msg->in_size[0];
-    size_t sign_size = msg->in_size[1];
 
-    if (!blob_size || !sign_size || msg->out_size[0] != sizeof(int32_t)) {
+    if (!blob_size ||msg->out_size[0] != sizeof(int32_t)) {
         return PSA_INVALID_PARAMETERS;
     }
 
-    if (!(blob = malloc(blob_size)) || !(sign = malloc(sign_size))) {
-        free(blob);
+    if (!(blob = malloc(blob_size))) {
         return PSA_MEM_ALLOC_FAILED;
     }
     
@@ -61,15 +43,10 @@ static int32_t call_secure_time_set_trusted(psa_msg_t *msg)
         SPM_PANIC("Failed to read the blob!\n");
     }
 
-    if (psa_read(msg->handle, 1, sign, sign_size) != sign_size) {
-        SPM_PANIC("Failed to read the signature!\n");
-    }
-    
-    time_set_status = secure_time_set_trusted_impl(blob, blob_size, sign, sign_size);
-    psa_write(msg->handle, 0, &time_set_status, sizeof(int32_t));
+    time_set_commit_status = secure_time_set_trusted_commit_impl(blob, blob_size);
+    psa_write(msg->handle, 0, &time_set_commit_status, sizeof(int32_t));
     
     free(blob);
-    free(sign);
     
     return PSA_SUCCESS;
 }
@@ -103,44 +80,6 @@ static int32_t call_secure_time_get(psa_msg_t *msg)
     time = secure_time_get_impl();
 
     psa_write(msg->handle, 0, &time, sizeof(uint64_t));
-    
-    return PSA_SUCCESS;
-}
-
-static int32_t call_secure_time_set_stored_schema(psa_msg_t *msg)
-{
-    secure_time_schema_t schema = {0};
-    int32_t set_schema_status = SECURE_TIME_SUCCESS;
-
-    if (msg->in_size[0] != sizeof(secure_time_schema_t) || msg->out_size[0] != sizeof(int32_t)) {
-        return PSA_INVALID_PARAMETERS;
-    }
-
-    if (psa_read(msg->handle, 0, &schema, sizeof(secure_time_schema_t)) != sizeof(secure_time_schema_t)) {
-        SPM_PANIC("Failed to read the requested schema to set!\n");
-    }
-
-    set_schema_status = secure_time_set_stored_schema_impl(&schema);
-    psa_write(msg->handle, 0, &set_schema_status, sizeof(int32_t));
-    
-    return PSA_SUCCESS;
-}
-
-static int32_t call_secure_time_get_stored_schema(psa_msg_t *msg)
-{
-    secure_time_schema_t schema = {0};
-    int32_t get_schema_status = SECURE_TIME_SUCCESS;
-
-    if (msg->out_size[0] != sizeof(int32_t) || msg->out_size[1] != sizeof(secure_time_schema_t)) {
-        return PSA_INVALID_PARAMETERS;
-    }
-
-    get_schema_status = secure_time_get_stored_schema_impl(&schema);
-    psa_write(msg->handle, 0, &get_schema_status, sizeof(int32_t));
-
-    if (get_schema_status == SECURE_TIME_SUCCESS) {
-        psa_write(msg->handle, 1, &schema, sizeof(secure_time_schema_t));
-    }
     
     return PSA_SUCCESS;
 }
@@ -234,14 +173,14 @@ void secure_time_main(void *ptr)
     while (1) {
         signals = psa_wait_any(PSA_WAIT_BLOCK);
 
-        if ((signals & GET_NONCE_MSK)) {
-            signal = GET_NONCE_MSK;
-            sf_call = call_secure_time_get_nonce;
+        if ((signals & TIME_SET_TRUSTED_INIT_MSK)) {
+            signal = TIME_SET_TRUSTED_INIT_MSK;
+            sf_call = call_secure_time_set_trusted_init;
         }
         else
-        if ((signals & TIME_SET_TRUSTED_MSK)) {
-            signal = TIME_SET_TRUSTED_MSK;
-            sf_call = call_secure_time_set_trusted;
+        if ((signals & TIME_SET_TRUSTED_COMMIT_MSK)) {
+            signal = TIME_SET_TRUSTED_COMMIT_MSK;
+            sf_call = call_secure_time_set_trusted_commit;
         }
         else
         if ((signals & TIME_SET_MSK)) {
@@ -252,16 +191,6 @@ void secure_time_main(void *ptr)
         if ((signals & TIME_GET_MSK)) {
             signal = TIME_GET_MSK;
             sf_call = call_secure_time_get;
-        }
-        else
-        if ((signals & SET_SCHEMA_MSK)) {
-            signal = SET_SCHEMA_MSK;
-            sf_call = call_secure_time_set_stored_schema;
-        }
-        else
-        if ((signals & GET_SCHEMA_MSK)) {
-            signal = GET_SCHEMA_MSK;
-            sf_call = call_secure_time_get_stored_schema;
         }
         else
         if ((signals & SET_PUBLIC_KEY_MSK)) {

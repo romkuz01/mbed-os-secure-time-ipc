@@ -17,15 +17,13 @@
 
 #include "psa_defs.h"
 
-#define GET_NONCE_MINOR           1
-#define TIME_GET_MINOR            1
-#define TIME_SET_MINOR            1
-#define TIME_SET_TRUSTED_MINOR    1
-#define SET_SCHEMA_MINOR          1
-#define GET_SCHEMA_MINOR          1
-#define SET_PUBLIC_KEY_MINOR      1
-#define GET_PUBLIC_KEY_SIZE_MINOR 1
-#define GET_PUBLIC_KEY_MINOR      1
+#define TIME_SET_TRUSTED_INIT_MINOR     1
+#define TIME_SET_TRUSTED_COMMIT_MINOR   1
+#define TIME_GET_MINOR                  1
+#define TIME_SET_MINOR                  1
+#define SET_PUBLIC_KEY_MINOR            1
+#define GET_PUBLIC_KEY_SIZE_MINOR       1
+#define GET_PUBLIC_KEY_MINOR            1
 
 int32_t psa_invoke_sf(
     uint32_t sfid,

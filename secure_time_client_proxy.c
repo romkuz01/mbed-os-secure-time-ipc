@@ -5,22 +5,19 @@
 #include "secure_time_client.h"
 #include "secure_time_client_spe.h"
 
-int32_t secure_time_get_nonce(size_t nonce_size, void *nonce)
+int32_t secure_time_set_trusted_init(uint64_t *nonce)
 {
     int32_t reply_status = SECURE_TIME_SUCCESS;
-    psa_invec_t request_data[1] = {
-        {&nonce_size, sizeof(size_t)}
-    };
     psa_outvec_t reply_data[2] = {
         {&reply_status, sizeof(int32_t)},
-        {nonce, nonce_size}
+        {&nonce, sizeof(uint64_t)}
     };
 
     if (!psa_invoke_sf(
-        GET_NONCE,
-        GET_NONCE_MINOR,
-        request_data,
-        1,
+        TIME_SET_TRUSTED_INIT,
+        TIME_SET_TRUSTED_INIT_MINOR,
+        NULL,
+        0,
         reply_data,
         2))
     {
@@ -30,27 +27,24 @@ int32_t secure_time_get_nonce(size_t nonce_size, void *nonce)
     return reply_status;
 }
 
-int32_t secure_time_set_trusted(
+int32_t secure_time_set_trusted_commit(
     const void *blob,
-    size_t blob_size,
-    const void *sign,
-    size_t sign_size
+    size_t blob_size
     )
 {
     int32_t reply_status = SECURE_TIME_SUCCESS;
-    psa_invec_t request_data[2] = {
-        {blob, blob_size},
-        {sign, sign_size}
+    psa_invec_t request_data[1] = {
+        {blob, blob_size}
     };
     psa_outvec_t reply_data[1] = {
         {&reply_status, sizeof(int32_t)}
     };
     
     if (!psa_invoke_sf(
-        TIME_SET_TRUSTED,
-        TIME_SET_TRUSTED_MINOR,
+        TIME_SET_TRUSTED_COMMIT,
+        TIME_SET_TRUSTED_COMMIT_MINOR,
         request_data,
-        2,
+        1,
         reply_data,
         1))
     {

@@ -7,15 +7,15 @@
   "stack_size": "0x400",
   "heap_size": "0x400",
   "secure_functions": [{
-      "sfid": "GET_NONCE",
-      "signal": "GET_NONCE_MSK",
+      "sfid": "TIME_SET_TRUSTED_INIT",
+      "signal": "TIME_SET_TRUSTED_INIT_MSK",
       "non_secure_clients": true,
       "minor_version": 1,
       "minor_policy": "strict"
     },
     {
-      "sfid": "TIME_SET_TRUSTED",
-      "signal": "TIME_SET_TRUSTED_MSK",
+      "sfid": "TIME_SET_TRUSTED_COMMIT",
+      "signal": "TIME_SET_TRUSTED_COMMIT_MSK",
       "non_secure_clients": true,
       "minor_version": 1,
       "minor_policy": "strict"
