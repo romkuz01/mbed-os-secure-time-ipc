@@ -4,8 +4,6 @@
 #include "secure_time_impl.h"
 #include <string.h>
 
-typedef int32_t (*psa_call)(psa_msg_t *msg);
-
 static int32_t call_secure_time_set_trusted_init(psa_msg_t *msg)
 {
     int32_t set_trusted_init_status = SECURE_TIME_SUCCESS;
@@ -166,50 +164,21 @@ static int32_t call_secure_time_get_stored_public_key(psa_msg_t *msg)
 void secure_time_main(void *ptr)
 {
     uint32_t signals = 0;
-    psa_signal_t signal = 0;
-    psa_call sf_call = NULL;
+    uint32_t signals_lowest_one_cleaned = 0;
+    uint32_t signal = 0;
     psa_msg_t msg = {0};
+    int32_t result;
     
     while (1) {
         signals = psa_wait_any(PSA_WAIT_BLOCK);
 
-        if ((signals & TIME_SET_TRUSTED_INIT_MSK)) {
-            signal = TIME_SET_TRUSTED_INIT_MSK;
-            sf_call = call_secure_time_set_trusted_init;
-        }
-        else
-        if ((signals & TIME_SET_TRUSTED_COMMIT_MSK)) {
-            signal = TIME_SET_TRUSTED_COMMIT_MSK;
-            sf_call = call_secure_time_set_trusted_commit;
-        }
-        else
-        if ((signals & TIME_SET_MSK)) {
-            signal = TIME_SET_MSK;
-            sf_call = call_secure_time_set;
-        }
-        else
-        if ((signals & TIME_GET_MSK)) {
-            signal = TIME_GET_MSK;
-            sf_call = call_secure_time_get;
-        }
-        else
-        if ((signals & SET_PUBLIC_KEY_MSK)) {
-            signal = SET_PUBLIC_KEY_MSK;
-            sf_call = call_secure_time_set_stored_public_key;
-        }
-        else
-        if ((signals & GET_PUBLIC_KEY_SIZE_MSK)) {
-            signal = GET_PUBLIC_KEY_SIZE_MSK;
-            sf_call = call_secure_time_get_stored_public_key_size;
-        }
-        else
-        if ((signals & GET_PUBLIC_KEY_MSK)) {
-            signal = GET_PUBLIC_KEY_MSK;
-            sf_call = call_secure_time_get_stored_public_key;
-        }
-        else {
+        if (signals == 0 || (signals | SECURE_TIME_WAIT_ANY_SFID_MSK) != SECURE_TIME_WAIT_ANY_SFID_MSK) {
             SPM_PANIC("Unexpected signal(s) %d!\n", (int)signals);
         }
+
+        // Extract the lowest asserted signal.
+        signals_lowest_one_cleaned = signals & (signals - 1);
+        signal = signals ^ signals_lowest_one_cleaned;
 
         psa_get(signal, &msg);
 
@@ -219,7 +188,32 @@ void secure_time_main(void *ptr)
                 psa_end(msg.handle, PSA_SUCCESS);
                 break;
             case PSA_IPC_MSG_TYPE_CALL:
-                psa_end(msg.handle, sf_call(&msg));
+                switch (signal) {
+                    case TIME_SET_TRUSTED_INIT_MSK:
+                        result = call_secure_time_set_trusted_init(&msg);
+                        break;
+                    case TIME_SET_TRUSTED_COMMIT_MSK:
+                        result = call_secure_time_set_trusted_commit(&msg);
+                        break;
+                    case TIME_SET_MSK:
+                        result = call_secure_time_set(&msg);
+                        break;
+                    case TIME_GET_MSK:
+                        result = call_secure_time_get(&msg);
+                        break;
+                    case SET_PUBLIC_KEY_MSK:
+                        result = call_secure_time_set_stored_public_key(&msg);
+                        break;
+                    case GET_PUBLIC_KEY_SIZE_MSK:
+                        result = call_secure_time_get_stored_public_key_size(&msg);
+                        break;
+                    case GET_PUBLIC_KEY_MSK:
+                        result = call_secure_time_get_stored_public_key(&msg);
+                        break;
+                    default:
+                        SPM_PANIC("Unexpected signal %d (must be a programming error)!\n", signal);
+                }
+                psa_end(msg.handle, result);
                 break;
             case PSA_IPC_MSG_TYPE_DISCONNECT:
                 psa_end(msg.handle, PSA_SUCCESS);

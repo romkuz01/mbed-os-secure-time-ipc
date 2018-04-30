@@ -35,20 +35,6 @@
       "minor_policy": "strict"
     },
     {
-      "sfid": "SET_SCHEMA",
-      "signal": "SET_SCHEMA_MSK",
-      "non_secure_clients": false,
-      "minor_version": 1,
-      "minor_policy": "strict"
-    },
-    {
-      "sfid": "GET_SCHEMA",
-      "signal": "GET_SCHEMA_MSK",
-      "non_secure_clients": false,
-      "minor_version": 1,
-      "minor_policy": "strict"
-    },
-    {
       "sfid": "SET_PUBLIC_KEY",
       "signal": "SET_PUBLIC_KEY_MSK",
       "non_secure_clients": false,
